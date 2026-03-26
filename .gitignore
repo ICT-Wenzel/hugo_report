@@ -1,3 +1,2 @@
 .env
 supabase/volumes/db/data/
-supabase/.env
