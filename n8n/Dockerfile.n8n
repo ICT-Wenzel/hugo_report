@@ -1,0 +1,67 @@
+FROM docker.n8n.io/n8nio/n8n:latest
+
+USER root
+WORKDIR /data
+
+# Berechtigungs-Warnung unterdrücken
+ENV N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+
+# Workflow kopieren
+RUN mkdir -p /app/workflow
+COPY n8n-utils/workflow /tmp/workflow
+RUN if [ -d /tmp/workflow ] && ls /tmp/workflow/*.json >/dev/null 2>&1; then \
+      cp /tmp/workflow/*.json /app/workflow/; \
+    fi
+
+RUN mkdir -p /app/credentials
+COPY n8n-utils/credential /tmp/credential
+RUN if [ -d /tmp/credential ] && ls /tmp/credential/*.json >/dev/null 2>&1; then \
+      cp /tmp/credential/*.json /app/credentials/; \
+    fi
+COPY <<'EOF' /docker-entrypoint-custom.sh
+#!/bin/sh
+set -e
+
+echo "=== CUSTOM SCRIPT: Starting n8n sequence ==="
+
+# 1. Schritt: Import (CLI führt Migrationen automatisch aus)
+#!/bin/sh
+
+echo "=== n8n Import Step ==="
+
+#######################################
+# Workflows importieren
+#######################################
+# 1. Schritt: Import (CLI führt Migrationen automatisch aus)
+if ls /app/workflow/*.json 1> /dev/null 2>&1; then
+  for file in /app/workflow/*.json; do
+    echo "Step 1: Importing workflow $file..."
+    n8n import:workflow --input="$file" || echo "Import failed for $file – continuing"
+  done
+else
+  echo "Step 1: No workflow JSON files found to import."
+fi
+
+#######################################
+# Credentials importieren
+#######################################
+if ls /app/credentials/*.json 1> /dev/null 2>&1; then
+  for file in /app/credentials/*.json; do
+    echo "→ Importing credential: $file"
+    n8n import:credentials --input="$file" \
+      || echo "Credential import failed for $file – continuing"
+  done
+else
+  echo "Step 2: No credential JSON files found."
+fi
+
+echo "=== Import finished ==="
+
+echo "Step 2: Starting n8n normally..."
+# 2. Schritt: n8n Server starten
+exec n8n start
+EOF
+
+RUN chmod +x /docker-entrypoint-custom.sh && chown node:node /docker-entrypoint-custom.sh
+USER node
+ENTRYPOINT ["/docker-entrypoint-custom.sh"]

@@ -1,0 +1,11 @@
+name: ywento-fullstack
+
+include:
+  - ./supabase/docker-compose.yml
+  - ./frontend/docker-compose.yml
+#  - ./n8n/docker-compose.yml
+
+networks:
+  default:
+    name: platform_network
+    driver: bridge

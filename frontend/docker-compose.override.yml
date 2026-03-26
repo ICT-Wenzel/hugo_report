@@ -1,0 +1,7 @@
+services:
+
+
+networks:
+  default:
+    external: true
+    name: platform_network

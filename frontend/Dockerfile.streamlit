@@ -1,0 +1,14 @@
+# Use a lightweight Python image
+FROM python:3.11-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install system dependencies (optional, but often needed for some python packages)
+RUN apt-get update
+
+# 3. Kopiere die requirements-Datei
+COPY app/requirements.txt .
+
+# 4. Requirements installieren
+RUN pip3 install --no-cache-dir -r requirements.txt
