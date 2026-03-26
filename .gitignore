@@ -1,2 +1,4 @@
 .env
 supabase/volumes/db/data/
+supabase/.env
+frontend/app/.env
